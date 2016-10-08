@@ -129,6 +129,10 @@
 					            $cbLanguageController->update($idlanguage, $namelanguage, $isactive, $languageiso, $countrycode, $isbaselanguage, $issystemlanguage);
 					        }
     					}
+    					if (isset($_POST["delete-language-select"]) ) { 
+        					$idlanguageselect = $_POST['idlanguagedelete'];
+        					$cbLanguageController->delete($idlanguageselect);
+						}
 		        	?>
 		        	<div class="table-responsive">
 		        		<table class="table table-striped">
@@ -141,7 +145,7 @@
 					                <th>COUNTRY CODE</th>
 					                <th>IS BASE?</th>
 					                <th>IS SYSTEM LANGUAGE?</th>
-					                <th>ACCIONES</th>
+					                <th colspan="3">ACCIONES</th>
 			            		</tr>
 			            	</thead>
 			            	<tbody>
@@ -151,7 +155,7 @@
 						        		$rows = $cbLanguageController->readAll();
 						        		echo "<br>";
 						        		foreach ($rows as $row) {
-						        			?>
+						        ?>
 						        			<tr>
 						                        <td><?php print($row->idlanguage); ?></td>
 						                        <td><?php print($row->namelanguage); ?></td>
@@ -169,6 +173,8 @@
 									                    '<?php print($row->countrycode); ?>', '<?php print($row->isbaselanguage); ?>',
 									                    '<?php print($row->issystemlanguage); ?>')">
 												    Ver</button>
+												</td>
+												<td>
 												    <button id="edit-language" name="edit-language" type="button"
 												            class="btn btn-primary"
 												            data-toggle="modal"
@@ -180,8 +186,16 @@
 									                        '<?php print($row->issystemlanguage); ?>')">
 												    Editar</button>
 												</td>
+												<td>
+												    <button id="delete-language-modal" name="delete-language-modal" type="button"
+							                                class="btn btn-danger"
+							                                data-toggle="modal"
+							                                data-target="#myModalDelete"
+							                                onclick="deleteCbLanguage('<?php print($row->idlanguage); ?>')">
+							                        Eliminar</button>  
+												</td>
 						                    </tr>
-					            	<?php      
+					            <?php      
 		        						}
 					        		} catch (Exception $e) {
 					        			echo 'Error al hacer la consulta: ' . $e;
@@ -249,7 +263,32 @@
 		        </div><!-- /.modal-content -->
 		    </div><!-- /.modal-dialog -->
 		</div><!-- /.modal -->  
- 
+ 		<!-- Modal DELETE -->
+        <div class="modal fade" id="myModalDelete" tabindex="-1" role="dialog" aria-labelledby="myModalDeleteLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalDeleteLabel">Eliminación de idioma</h4>
+                    </div>
+                    <form role="form" name="formDeleteCbLanguage" method="post" action="index.php">
+                        <div class="modal-body">                                    
+                                <div class="input-group">
+                                    <label for="idlanguage">¿Se va a eliminar el registro del idioma seleccionado?</label>
+                                </div>       
+                                <div class="input-group">
+                                    <label for="idlanguage">Idioma</label>
+                                    <input type="text" readonly class="form-control" id="idlanguagedelete" name="idlanguagedelete" placeholder="es_ES (por ejemplo)" >                                        
+                                </div>
+                        </div>
+                        <div class="modal-footer">
+                                <button id="delete-language-select" name="delete-language-select" type="submit" class="btn btn-primary">Aceptar</button>                                        
+                                <button id="cancel"type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>                                    
+                        </div>
+                    </form>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->  
         <!-- Bootstrap core JavaScript
         ================================================== -->
         <!-- Placed at the end of the document so the pages load faster -->
@@ -260,47 +299,9 @@
         <script src="assets/js/vendor/holder.min.js"></script>
         <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
         <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
+        <script src="js/cbLanguage.js"></script>
         <script>
-        	function newCbLanguage() {
-        		openCbLanguage('new', null, null, null, null, null, null, null);
-	        }
-
-	        function openCbLanguage(action, idlanguage, namelanguage, isactive, languageiso, countrycode, isbaselanguage, issystemlanguage){    
-	            document.formCbLanguage.idlanguage.value = idlanguage;
-	            document.formCbLanguage.namelanguage.value = namelanguage;
-	            document.formCbLanguage.isactive.value = isactive;
-	            document.formCbLanguage.languageiso.value = languageiso;
-	            document.formCbLanguage.countrycode.value = countrycode;
-	            document.formCbLanguage.isbaselanguage.value = isbaselanguage;
-	            document.formCbLanguage.issystemlanguage.value = issystemlanguage;
-	             
-	            document.formCbLanguage.idlanguage.disabled = (action === 'see')?true:false;                
-	            document.formCbLanguage.namelanguage.disabled = (action === 'see')?true:false; 
-	            document.formCbLanguage.isactive.disabled = (action === 'see')?true:false; 
-	            document.formCbLanguage.languageiso.disabled = (action === 'see')?true:false; 
-	            document.formCbLanguage.countrycode.disabled = (action === 'see')?true:false; 
-	            document.formCbLanguage.isbaselanguage.disabled = (action === 'see')?true:false; 
-	            document.formCbLanguage.issystemlanguage.disabled = (action === 'see')?true:false; 
-	             
-	            $('#myModal').on('shown.bs.modal', function () {
-	                var modal = $(this);
-	                if (action === 'new'){                            
-	                    modal.find('.modal-title').text('Creación de idioma');  
-	                    $('#update-language').hide();                
-	                    $('#save-language').show();
-	                }else if (action === 'edit'){
-	                    modal.find('.modal-title').text('Actualizar idioma');
-	                    $('#save-language').hide();                    
-	                    $('#update-language').show();   
-	                }else if (action === 'see'){
-	                    modal.find('.modal-title').text('Ver idioma');
-	                    $('#save-language').hide();   
-	                    $('#update-language').hide();   
-	                }
-	                $('#idlanguage').focus()
-	             
-	            });
-        	} 
+        	
         </script>
     </body>
 </html>

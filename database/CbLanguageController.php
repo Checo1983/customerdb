@@ -39,6 +39,17 @@ class CbLanguageController {
 	        exit();
 	    }
 	}
-}
 
- ?>
+	public function delete($idlanguage){ 
+	    $sqlDelete = 
+	        "DELETE FROM cb_language"
+	        . "     WHERE   idlanguage = '".$idlanguage."'"; 
+	    try {             
+	        $this->cdb->exec($sqlDelete);      
+	    } catch (Exception $exception) {            
+	        echo 'Error al eliminar un idioma en la función delete(...): '.$exception->getMessage();
+	        exit();
+	    }
+	}
+}
+?>
